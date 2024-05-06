@@ -96,7 +96,6 @@ int main()
         case 4:
             fflush(stdin);
             int id;
-            char *tipoTarea;
 
             printf("\n> Digite el ID a buscar: ");
             scanf("%d", &id);
@@ -120,7 +119,36 @@ int main()
             }
 
             break;
-        
+        case 5:
+            fflush(stdin);
+            char buff[100];
+            char *palabraClave;
+
+            printf("\n> Digite la palabra clave a buscar: ");
+            gets(buff);
+
+            palabraClave = (char *)malloc( (strlen(buff) + 1) * sizeof(char) );
+            strcpy(palabraClave, buff);
+
+            Tarea tareaFiltradaB = filtrarPalabra(tareasPendientes, palabraClave);
+            if (tareaFiltradaB.TareaID == -1) // Si el ID de la tarea es -1, quiere decir que no se encontró una tarea con ese ID en la lista
+            {
+                tareaFiltradaB = filtrarPalabra(tareasRealizadas, palabraClave);
+                if (tareaFiltradaB.TareaID == -1) // Si el ID de la tarea es -1, quiere decir que no se encontró una tarea con ese ID en la lista
+                {
+                    printf("\n[!] NO se ha encontrado una tarea con el ID especificado [!]\n");
+                }
+                else
+                {
+                    mostrarTarea(tareaFiltradaB, "TAREA REALIZADA");
+                }
+            }
+            else
+            {
+                mostrarTarea(tareaFiltradaB, "TAREA PENDIENTE");
+            }
+
+            break;
         case 6:
             printf("\n*** OPERACIONES FINALIZADAS ***\n");
             break;
@@ -314,6 +342,34 @@ Tarea filtrarId(Nodo *lista, int id)
     tareaEncontrada.TareaID = -1;
     
     while ( (lista != NULL) && (lista->T.TareaID != id) )
+    {
+        lista = lista->Siguiente;
+    }
+
+    if (lista != NULL)
+    {
+        tareaEncontrada.TareaID = lista->T.TareaID;
+        tareaEncontrada.Descripcion = (char *)malloc( (strlen(lista->T.Descripcion) + 1) * sizeof(char) );
+        strcpy(tareaEncontrada.Descripcion, lista->T.Descripcion);
+        tareaEncontrada.Duracion = lista->T.Duracion;
+    }
+
+    return tareaEncontrada;
+}
+
+/**
+ * Busca una tarea que contenga una cierta palabra clave en una lista
+ * 
+ * @param lista        lista en la cual buscar
+ * @param palabraClave palabra clave a filtrar en las descripciones de las tareas
+ * @return Tarea encontrada, o una tarea con ID -1 en caso de no encontrarse en la lista
+*/
+Tarea filtrarPalabra(Nodo *lista, char *palabraClave)
+{
+    Tarea tareaEncontrada;
+    tareaEncontrada.TareaID = -1;
+
+    while ( (lista != NULL) && (strstr(lista->T.Descripcion, palabraClave) == NULL) )
     {
         lista = lista->Siguiente;
     }
