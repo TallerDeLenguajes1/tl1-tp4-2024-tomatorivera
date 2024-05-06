@@ -28,6 +28,9 @@ void eliminarNodo(Nodo **start);
 void mostrarLista(Nodo *start);
 void liberarMemoria(Nodo **start);
 Tarea seleccionarTarea(Nodo **start);
+Tarea filtrarId(Nodo *lista, int id);
+Tarea filtrarPalabra(Nodo *lista, char *palabraClave);
+void mostrarTarea(Tarea tarea, char * tipoTarea);
 
 int main()
 {
@@ -60,14 +63,17 @@ int main()
 
     } while (opcion != 2);
 
-    // PUNTO 2 - Menú para transferir tareas pendientes a realizadas
+    // PUNTO 2 y 3 - Menú para transferir tareas pendientes a realizadas, y ver tareas tanto pendientes como realizadas
+    // PUNTO 4 - Implementación del módulo de busqueda
     do
     {
-        printf("\n*** REALIZACION DE TAREAS ***");
+        printf("\n*** MENU DE OPERACIONES ***");
         printf("\n\t1. Marcar como pendiente una nueva tarea");
         printf("\n\t2. Ver tareas pendientes");
         printf("\n\t3. Ver tareas realizadas");
-        printf("\n\t4. Finalizar transferencia de tareas");
+        printf("\n\t4. Filtrar tarea por ID");
+        printf("\n\t5. Filtrar tarea por palabra clave");
+        printf("\n\t6. Finalizar transferencia de tareas");
         printf("\n> Digite su opcion: ");
         scanf("%d", &opcion);
 
@@ -76,7 +82,7 @@ int main()
         case 1:
             printf(""); // C no me permite poner una declaración luego de un label unu
             Tarea tareaTransferida = seleccionarTarea(&tareasPendientes);
-
+            
             // Si el ID de la tarea devuelta es distinto de -1, quiere decir que se seleccionó una tarea existente
             if (tareaTransferida.TareaID != -1) insertarNodo(&tareasRealizadas, crearNodo(tareaTransferida));
 
@@ -88,14 +94,42 @@ int main()
             mostrarLista(tareasRealizadas);
             break;
         case 4:
-            printf("\n*** TRANSFERENCIA DE TAREAS FINALIZADA ***\n");
+            fflush(stdin);
+            int id;
+            char *tipoTarea;
+
+            printf("\n> Digite el ID a buscar: ");
+            scanf("%d", &id);
+
+            Tarea tareaFiltrada = filtrarId(tareasPendientes, id);
+            if (tareaFiltrada.TareaID == -1) // Si el ID de la tarea es -1, quiere decir que no se encontró una tarea con ese ID en la lista
+            {
+                tareaFiltrada = filtrarId(tareasRealizadas, id);
+                if (tareaFiltrada.TareaID == -1) // Si el ID de la tarea es -1, quiere decir que no se encontró una tarea con ese ID en la lista
+                {
+                    printf("\n[!] NO se ha encontrado una tarea con el ID especificado [!]\n");
+                }
+                else
+                {
+                    mostrarTarea(tareaFiltrada, "TAREA REALIZADA");
+                }
+            }
+            else
+            {
+                mostrarTarea(tareaFiltrada, "TAREA PENDIENTE");
+            }
+
+            break;
+        
+        case 6:
+            printf("\n*** OPERACIONES FINALIZADAS ***\n");
             break;
         default:
             printf("\n[!] Ingrese una opcion valida\n");
             break;
         }
 
-    } while (opcion != 4);
+    } while (opcion != 6);
 
     // Libero memoria de las listas
     liberarMemoria(&tareasPendientes);
@@ -265,6 +299,47 @@ Tarea seleccionarTarea(Nodo **start)
     }
 
     return tareaSeleccionada;
+}
+
+/**
+ * Busca una tarea que tenga un cierto ID en una lista
+ * 
+ * @param lista Lista enlazada en la cual buscar una tarea con cierto ID
+ * @param id    ID a filtrar
+ * @return Tarea encontrada, o una tarea con ID -1 en caso de no encontrarse en la lista
+ */
+Tarea filtrarId(Nodo *lista, int id)
+{
+    Tarea tareaEncontrada;
+    tareaEncontrada.TareaID = -1;
+    
+    while ( (lista != NULL) && (lista->T.TareaID != id) )
+    {
+        lista = lista->Siguiente;
+    }
+
+    if (lista != NULL)
+    {
+        tareaEncontrada.TareaID = lista->T.TareaID;
+        tareaEncontrada.Descripcion = (char *)malloc( (strlen(lista->T.Descripcion) + 1) * sizeof(char) );
+        strcpy(tareaEncontrada.Descripcion, lista->T.Descripcion);
+        tareaEncontrada.Duracion = lista->T.Duracion;
+    }
+
+    return tareaEncontrada;
+}
+
+/**
+ * Muestra por pantalla los detalles de una Tarea
+ * 
+ * @param tarea     Tarea a mostrar
+ * @param tipoTarea Tipo de la tarea enviada (pendiente o a realizar)
+*/
+void mostrarTarea(Tarea tarea, char *tipoTarea)
+{
+    printf("\n*** Tarea de ID %d (%s) ***", tarea.TareaID, tipoTarea);
+    printf("\n\t- Descripcion: %s", tarea.Descripcion);
+    printf("\n\t- Duracion: %d\n", tarea.Duracion);
 }
 
 /**
